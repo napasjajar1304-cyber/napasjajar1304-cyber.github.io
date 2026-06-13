@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="เว็บไซต์สื่อการเรียนการสอนรายวิชาการเขียนโปรแกรมคอมพิวเตอร์เบื้องต้น (ภาษา Python) สำหรับนักศึกษาระดับปริญญาตรีปีที่ 1 พร้อมเครื่องมือเขียนโค้ดและทดสอบความรู้">
+  <meta name="keywords" content="Python, เขียนโปรแกรมเบื้องต้น, สื่อการสอน Python, เรียนเขียนโค้ด, Bloom's Taxonomy, Pyodide">
+  <meta name="author" content="Napasjajar Dev">
+  <title>Python Programming: สื่อการเรียนรู้และทดลองเขียนโค้ดภาษา Python</title>
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="css/styles.css">
+  
+  <!-- Pyodide Engine (Python in WebAssembly) -->
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+</head>
+<body>
+
+  <div class="app-container" id="app-wrapper">
+    
+    <!-- 1. Left Sidebar: สารบัญและประวัติการเรียน -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">
+          <span class="sidebar-logo-icon">🐍</span>
+          <span>Python 101</span>
+        </div>
+      </div>
+      
+      <!-- หลอดแสดงผลความก้าวหน้าโดยรวม -->
+      <div class="sidebar-progress-box">
+        <div class="progress-info">
+          <span>ความคืบหน้าโดยรวม</span>
+          <span id="progress-percentage-text">0%</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-bar" id="overall-progress-bar"></div>
+        </div>
+      </div>
+
+      <!-- สารบัญระดับบทเรียน (สร้างแบบ Dynamic จาก JavaScript) -->
+      <nav class="sidebar-menu" id="sidebar-menu-list" aria-label="สารบัญบทเรียน">
+        <!-- รายละเอียดสารบัญจะถูกใส่ผ่าน js/app.js -->
+      </nav>
+      
+      <!-- เมนูด้านล่างสุด: สลับธีม และรีเซ็ต -->
+      <footer class="sidebar-footer">
+        <button class="btn btn-secondary" id="theme-toggle-btn" aria-label="เปลี่ยนโหมดสี">🌙 โหมดกลางคืน</button>
+        <button class="btn btn-danger btn-sm" id="reset-progress-btn" onclick="resetLearningProgress()" aria-label="ล้างความก้าวหน้าการเรียนรู้">
+          🗑️ รีเซ็ตประวัติการเรียน
+        </button>
+      </footer>
+    </aside>
+
+    <!-- 2. Main Workspace -->
+    <div class="main-workspace">
+      
+      <!-- Top Navigation Bar -->
+      <header class="top-navbar">
+        <div style="display: flex; align-items: center; gap: 16px;">
+          <!-- ปุ่มเมนูสำหรับเปิด/ปิด Sidebar บนมือถือ -->
+          <button class="hamburger-menu-btn" id="mobile-hamburger-btn" aria-label="เปิดเมนูสารบัญ" onclick="toggleMobileSidebar()">
+            ☰
+          </button>
+          
+          <nav aria-label="Breadcrumb">
+            <ul class="breadcrumb" id="breadcrumb-path">
+              <li>บทเรียน</li>
+              <li>1. พื้นฐานและโครงสร้างควบคุม</li>
+              <li>1.1 ตัวแปรและชนิดข้อมูล</li>
+            </ul>
+          </nav>
+        </div>
+
+        <!-- ตู้เก็บสะสมเข็มกลัดความสำเร็จ (Badge Cabinet) -->
+        <div class="navbar-actions">
+          <div class="badge-cabinet-header" id="badge-cabinet">
+            <span class="badge-cabinet-title">🎖️ ตราเกียรติยศ:</span>
+            <div class="badges-mini-list" id="badges-box">
+              <!-- ปรากฏเหรียญตราแบบไดนามิก -->
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- โครงข่ายหลัก: บทเรียนฝั่งซ้าย + รันโค้ดฝั่งขวา -->
+      <main class="workspace-content-grid">
+        
+        <!-- พื้นที่แสดงบทเรียนและคำถาม (Dynamic Content) -->
+        <section class="lesson-container" id="lesson-scroll-view" aria-label="เนื้อหาบทเรียน">
+          <div id="lesson-dynamic-area">
+            <!-- โหลด HTML บทความหรือกล่องข้อสอบตรงนี้ -->
+          </div>
+        </section>
+
+        <!-- Sandbox: เครื่องมือเขียนรันโค้ด Python -->
+        <section class="playground-container" id="code-playground-card" aria-label="กล่องทดลองเขียนโค้ด Python">
+          
+          <!-- หัวข้อ Playground -->
+          <div class="playground-header">
+            <div class="playground-title">
+              <span>🧪 Python Sandbox (ทดลองเขียนรันโค้ด)</span>
+            </div>
+            <!-- สถานะการรัน Python Engine -->
+            <div class="py-engine-loader d-none" id="py-engine-loader">
+              ⏳ กำลังโหลด Python...
+            </div>
+          </div>
+
+          <div class="editor-wrapper">
+            <!-- ส่วนเขียนโค้ดภาษา Python -->
+            <textarea 
+              id="code-editor" 
+              class="code-editor-textarea" 
+              placeholder="# พิมพ์คำสั่ง Python ที่นี่..." 
+              spellcheck="false"
+              aria-label="ช่องกรอกรหัสโปรแกรม Python"
+            ></textarea>
+            
+            <!-- ปุ่มสั่งงาน Sandbox -->
+            <div style="padding: 10px 16px; background-color: var(--secondary-light); border-bottom: 1px solid var(--border-color); display: flex; gap: 10px;">
+              <button class="btn btn-primary" id="btn-run-code" aria-label="รันโปรแกรมภาษา Python">
+                ⚡ รันรหัส (Run)
+              </button>
+              <button class="btn btn-secondary" id="btn-clear-console" aria-label="เคลียร์คอนโซลผลลัพธ์">
+                🗑️ ล้างจอคอนโซล
+              </button>
+            </div>
+
+            <!-- หน้าจอแสดงผลลัพธ์ (Virtual Console) -->
+            <div class="terminal-panel">
+              <div class="terminal-header">
+                <span class="terminal-title">🖥️ ผลลัพธ์หน้าจอแสดงผล (Output Console)</span>
+              </div>
+              <div class="terminal-console" id="terminal-console" aria-live="polite">
+                <!-- ข้อมูลจากฟังก์ชัน print() และ error จะถูกส่งมาแสดงที่นี่ -->
+              </div>
+            </div>
+          </div>
+
+        </section>
+
+      </main>
+    </div>
+
+    <!-- ส่วนพ่นตราเกียรติยศที่ปลดล็อกแบบลอยตัว (Achievement Floating Notification) -->
+    <div class="floating-alerts-container" id="floating-alerts" aria-live="assertive"></div>
+
+  </div>
+
+  <!-- Script Files -->
+  <script src="js/content.js"></script>
+  <script src="js/playground.js"></script>
+  <script src="js/quiz.js"></script>
+  <script src="js/app.js"></script>
+
+  <!-- สคริปต์ขนาดเล็กควบคุม Sidebar บนอุปกรณ์หน้าจอเล็ก -->
+  <script>
+    function toggleMobileSidebar() {
+      const wrapper = document.getElementById('app-wrapper');
+      wrapper.classList.toggle('sidebar-open');
+    }
+
+    // ปิดเมนูอัติโนมัติเมื่อกดเลือกบทเรียนในโหมด Mobile
+    document.addEventListener('click', function(event) {
+      const sidebar = document.querySelector('.sidebar');
+      const hamburger = document.getElementById('mobile-hamburger-btn');
+      const wrapper = document.getElementById('app-wrapper');
+      
+      if (window.innerWidth < 992 && 
+          wrapper.classList.contains('sidebar-open') && 
+          !sidebar.contains(event.target) && 
+          !hamburger.contains(event.target)) {
+        wrapper.classList.remove('sidebar-open');
+      }
+    });
+  </script>
+</body>
+</html>
